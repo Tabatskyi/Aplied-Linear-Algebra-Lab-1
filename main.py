@@ -2,6 +2,10 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
+def add_polygon(axis, matrix, color, label):
+    axis.add_patch(plt.Polygon(matrix, closed=True, fill=None, edgecolor=color, label=label))
+
+
 def transform(original_matrix, transform_matrix):
     original_matrix = np.array(original_matrix)
     transform_matrix = np.array(transform_matrix)
@@ -14,23 +18,18 @@ def transform(original_matrix, transform_matrix):
         raise ValueError(
             "The number of columns in the original matrix must match the number of rows in the transform matrix.")
 
-    fig, ax = plt.subplots()
-    colors = ['b', 'g']
+    axis = plt.subplots()[1]
 
-    for i in range(len(original_matrix)):
-        ax.quiver(0, 0, original_matrix[i, 0], original_matrix[i, 1], angles='xy', scale_units='xy', scale=1,
-                  color=colors[0], width=0.005, label=f"Original Vec {i + 1}")
+    add_polygon(axis, original_matrix, 'b', 'Original')
+    add_polygon(axis, transformed_matrix, 'r', 'Transformed')
 
-    for i in range(len(transformed_matrix)):
-        ax.quiver(0, 0, transformed_matrix[i, 0], transformed_matrix[i, 1], angles='xy', scale_units='xy', scale=1,
-                  color=colors[1], width=0.005, label=f"Transformed Vec {i + 1}")
-
-    max_value = np.max(transformed_matrix)
+    all_points = np.concatenate((original_matrix, transformed_matrix))
+    max_value = np.max(np.abs(all_points))
     plt.xlim(-max_value, max_value)
     plt.ylim(-max_value, max_value)
-    ax.set_aspect('equal')
+
     plt.grid(True)
-    # plt.legend()
+    plt.legend()
     plt.show()
 
 
