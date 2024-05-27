@@ -1,3 +1,4 @@
+import math
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -20,10 +21,7 @@ def show_transformation(matrices: list, labels: list):
     plt.show()
 
 
-def transform_by_matrix(original_matrix, transform_matrix, operation_label='Transformed'):
-    original_matrix = np.array(original_matrix)
-    transform_matrix = np.array(transform_matrix)
-
+def transform_by_matrix(original_matrix: np.array, transform_matrix: np.array, operation_label='Transformed'):
     if original_matrix.shape[1] == transform_matrix.shape[0]:
         transformed_matrix = np.dot(original_matrix, transform_matrix)
     elif original_matrix.shape[0] == transform_matrix.shape[1]:
@@ -34,18 +32,18 @@ def transform_by_matrix(original_matrix, transform_matrix, operation_label='Tran
     show_transformation([original_matrix, transformed_matrix], ['Original', operation_label])
 
 
-def rotate_matrix(original_matrix, angle):
-    angle_rad = np.radians(angle)
-    trans_matrix = np.array([[np.cos(angle_rad), -np.sin(angle_rad)], [np.sin(angle_rad), np.cos(angle_rad)]])
+def rotate_matrix(original_matrix: np.array, angle: float):
+    angle_rad = math.radians(angle)
+    trans_matrix = np.array([[math.cos(angle_rad), -math.sin(angle_rad)], [math.sin(angle_rad), math.cos(angle_rad)]])
     transform_by_matrix(original_matrix, trans_matrix, f"Rotated by {angle}º")
 
 
-def scale_matrix(original_matrix, scale_x, scale_y):
+def scale_matrix(original_matrix: np.array, scale_x: float, scale_y: float):
     trans_matrix = np.array([[scale_x, 0], [0, scale_y]])
     transform_by_matrix(original_matrix, trans_matrix, f"Scaled by {scale_x} on x and {scale_y} on y")
 
 
-def reflect_matrix(original_matrix, axis):
+def reflect_matrix(original_matrix: np.array, axis: str):
     if axis == 'x':
         trans_matrix = np.array([[1, 0], [0, -1]])
     elif axis == 'y':
@@ -53,10 +51,10 @@ def reflect_matrix(original_matrix, axis):
     transform_by_matrix(original_matrix, trans_matrix, f"Reflected by {axis}")
 
 
-def angle_matrix(original_matrix, k, axis):
+def angle_matrix(original_matrix: np.array, k: float, axis: str):
     if axis == 'x':
         trans_matrix = np.array([[1, k], [0, 1]])
-    elif axis == 'y':
+    else:
         trans_matrix = np.array([[1, 0], [k, 1]])
     transform_by_matrix(original_matrix, trans_matrix, f"Angled by {axis} with {k} coefficient")
 
