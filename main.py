@@ -20,7 +20,7 @@ def show_transformation(matrices: list, labels: list):
     plt.show()
 
 
-def transform(original_matrix, transform_matrix):
+def transform_by_matrix(original_matrix, transform_matrix, operation_label='Transformed'):
     original_matrix = np.array(original_matrix)
     transform_matrix = np.array(transform_matrix)
 
@@ -31,9 +31,41 @@ def transform(original_matrix, transform_matrix):
     else:
         raise ValueError("Impossible to multiply this matrices.")
 
-    show_transformation([original_matrix, transformed_matrix], ['Original', 'Transformed'])
+    show_transformation([original_matrix, transformed_matrix], ['Original', operation_label])
+
+
+def rotate_matrix(original_matrix, angle):
+    angle_rad = np.radians(angle)
+    trans_matrix = np.array([[np.cos(angle_rad), -np.sin(angle_rad)], [np.sin(angle_rad), np.cos(angle_rad)]])
+    transform_by_matrix(original_matrix, trans_matrix, f"Rotated by {angle}º")
+
+
+def scale_matrix(original_matrix, scale_x, scale_y):
+    trans_matrix = np.array([[scale_x, 0], [0, scale_y]])
+    transform_by_matrix(original_matrix, trans_matrix, f"Scaled by {scale_x} on x and {scale_y} on y")
+
+
+def reflect_matrix(original_matrix, axis):
+    if axis == 'x':
+        trans_matrix = np.array([[1, 0], [0, -1]])
+    elif axis == 'y':
+        trans_matrix = np.array([[-1, 0], [0, 1]])
+    transform_by_matrix(original_matrix, trans_matrix, f"Reflected by {axis}")
+
+
+def angle_matrix(original_matrix, k, axis):
+    if axis == 'x':
+        trans_matrix = np.array([[1, k], [0, 1]])
+    elif axis == 'y':
+        trans_matrix = np.array([[1, 0], [k, 1]])
+    transform_by_matrix(original_matrix, trans_matrix, f"Angled by {axis} with {k} coefficient")
 
 
 batman = np.array([[0, 0], [1, 0.2], [0.4, 1], [0.5, 0.4], [0, 0.8], [-0.5, 0.4], [-0.4, 1], [-1, 0.2], [0, 0]])
-transform_matrix = np.array([[1, 0], [1, 1]])
-transform(batman, transform_matrix)
+rotate_matrix(batman, 45)
+scale_matrix(batman, 2, 2)
+reflect_matrix(batman, 'x')
+angle_matrix(batman, 2, 'y')
+
+trans_matrix = np.array([[0, 1], [1, 0]])
+transform_by_matrix(batman, trans_matrix)
