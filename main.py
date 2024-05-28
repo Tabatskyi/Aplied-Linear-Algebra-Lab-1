@@ -1,4 +1,5 @@
 import math
+import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -47,13 +48,27 @@ def scale_matrix(original_matrix: np.array, scales: list):
     transform_by_matrix(original_matrix, trans_matrix, f"Scaled by {scales}")
 
 
-def rotate_matrix(original_matrix: np.array, angle: float, plane=(0, 1)):
+def rotate_matrix(original_matrix: np.array, angle: float, axis='y'):
     angle_rad = math.radians(angle)
     cos_a, sin_a = math.cos(angle_rad), math.sin(angle_rad)
-    trans_matrix = np.eye(original_matrix.shape[1])
-    x, y = plane
-    trans_matrix[[x, x, y, y], [x, y, x, y]] = [cos_a, -sin_a, sin_a, cos_a]
-    transform_by_matrix(original_matrix, trans_matrix, f"Rotated by {angle}º in {plane} plane")
+
+    if original_matrix.shape[1] == 2:
+        trans_matrix = np.array([
+            [cos_a, -sin_a],
+            [sin_a, cos_a]
+        ])
+    elif original_matrix.shape[1] == 3:
+        match axis:
+            case 'x':
+                trans_matrix = np.array([[1, 0, 0], [0, cos_a, -sin_a], [0, sin_a, cos_a]])
+            case 'y':
+                trans_matrix = np.array([[cos_a, 0, sin_a], [0, 1, 0], [-sin_a, 0, cos_a]])
+            case 'z':
+                trans_matrix = np.array([[cos_a, -sin_a, 0], [sin_a, cos_a, 0], [0, 0, 1]])
+    else:
+        raise ValueError("Rotation only supports 2D or 3D matrices.")
+
+    transform_by_matrix(original_matrix, trans_matrix, f"Rotated by {angle}º around axis {axis}")
 
 
 def reflect_matrix(original_matrix: np.array, axes: list):
