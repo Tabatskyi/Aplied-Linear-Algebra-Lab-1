@@ -3,24 +3,28 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
-def show_transformation(matrices: list, labels: list, dimensions=3):
+def show_matrices(matrices: list, labels: list):
     fig = plt.figure()
-    if dimensions == 3:
+    max_value = np.max(matrices)
+
+    if all(matrix.shape[1] == 3 for matrix in matrices):
         axis = fig.add_subplot(111, projection='3d')
         for i, matrix in enumerate(matrices):
-            if matrix.shape[1] < 3:
-                raise ValueError("Matrix must have at least three dimensions for 3D plotting")
             xs, ys, zs = matrix[:, 0], matrix[:, 1], matrix[:, 2]
             axis.plot(xs, ys, zs, label=labels[i])
 
-        axis.set_xlabel('X')
-        axis.set_ylabel('Y')
-        axis.set_zlabel('Z')
-    else:
+        axis.set_xlim(-max_value, max_value)
+        axis.set_ylim(-max_value, max_value)
+        axis.set_zlim(-max_value, max_value)
+    elif all(matrix.shape[1] == 2 for matrix in matrices):
         axis = fig.add_subplot(111)
         for i, matrix in enumerate(matrices):
             xs, ys = matrix[:, 0], matrix[:, 1]
             axis.plot(xs, ys, label=labels[i])
+        plt.xlim(-max_value, max_value)
+        plt.ylim(-max_value, max_value)
+    else:
+        raise ValueError("Impossible to show this matrices.")
 
     plt.grid(True)
     plt.legend()
@@ -35,7 +39,7 @@ def transform_by_matrix(original_matrix: np.array, transform_matrix: np.array, o
     else:
         raise ValueError("Impossible to multiply this matrices.")
 
-    show_transformation([original_matrix, transformed_matrix], ['Original', operation_label])
+    show_matrices([original_matrix, transformed_matrix], ['Original', operation_label])
 
 
 def scale_matrix(original_matrix: np.array, scales: list):
@@ -53,9 +57,12 @@ def rotate_matrix(original_matrix: np.array, angle: float, plane=(0, 1)):
 
 
 def reflect_matrix(original_matrix: np.array, axes: list):
+    axes_names = np.array(['x', 'y', 'z'])
     reflect_vector = [-1 if axis else 1 for axis in axes]
+    if len(axes) == 2:
+        axes.append(False)
     trans_matrix = np.diag(reflect_vector)
-    transform_by_matrix(original_matrix, trans_matrix, f"Reflected across {axes}")
+    transform_by_matrix(original_matrix, trans_matrix, f"Reflected across {axes_names[axes]}")
 
 
 def angle_matrix(original_matrix: np.array, k: float, fixed_axis: int, variable_axis: int):
@@ -64,18 +71,21 @@ def angle_matrix(original_matrix: np.array, k: float, fixed_axis: int, variable_
     transform_by_matrix(original_matrix, trans_matrix, f"Angled by {k} along {fixed_axis} axis")
 
 
-# batman = np.array([[0, 0], [1, 0.2], [0.4, 1], [0.5, 0.4], [0, 0.8], [-0.5, 0.4], [-0.4, 1], [-1, 0.2], [0, 0]])
-# rotate_matrix(batman, 45)
-# scale_matrix(batman, [2, 2])
-# reflect_matrix(batman, [True, False])
-# angle_matrix(batman, 2, 0, 1)
-#
-# trans_matrix = np.array([[0, 1], [1, 0]])
-# transform_by_matrix(batman, trans_matrix)
+batman = np.array([[0, 0], [1, 0.2], [0.4, 1], [0.5, 0.4], [0, 0.8], [-0.5, 0.4], [-0.4, 1], [-1, 0.2], [0, 0]])
+rotate_matrix(batman, 45)
+scale_matrix(batman, [2, 2])
+reflect_matrix(batman, [False, True])
+angle_matrix(batman, 2, 0, 1)
+
+trans_matrix = np.array([[0, 1], [1, 0]])
+transform_by_matrix(batman, trans_matrix)
 
 cube = np.array([[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0], [1, 0, 1], [1, 1, 1], [0, 1, 1], [0, 0, 1]])
+show_matrices([cube], ['Original'])
 
 rotate_matrix(cube, 45, (0, 1))
+rotate_matrix(cube, 45, (1, 2))
+rotate_matrix(cube, 45, (0, 2))
 scale_matrix(cube, [1, 2, 1])
 reflect_matrix(cube, [True, False, False])
 angle_matrix(cube, 1, 2, 1)
