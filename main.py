@@ -37,7 +37,8 @@ def show_matrices(matrices: list, labels: list, save=False):
         plt.grid(True)
         plt.legend()
     else:
-        plt.savefig('plot.png')
+        plt.axis('off')
+        plt.savefig('plot.png', bbox_inches='tight')
     plt.show()
 
 
@@ -101,20 +102,25 @@ def rotate_image(image, angle):
     (height, width) = image.shape[:2]
     center = (width // 2, height // 2)
     matrix = cv2.getRotationMatrix2D(center, angle, 1.0)
-    return cv2.warpAffine(image, matrix, (width, height))
+    return cv2.warpAffine(image, matrix, (width, height), borderMode=cv2.BORDER_REPLICATE)
 
 
 def scale_image(image, scale_x, scale_y):
-    scaled = cv2.resize(image, None, fx=scale_x, fy=scale_y)
-    return scaled
+    height, width = image.shape[:2]
+    new_width = int(width * scale_x)
+    new_height = int(height * scale_y)
+
+    return cv2.resize(image, (new_width, new_height))
 
 
 def reflect_image(image, axis):
     if axis == 'x':
-        reflected = cv2.flip(image, 0)
+        return cv2.flip(image, 0)
+    elif axis == 'y':
+        return cv2.flip(image, 1)
     else:
-        reflected = cv2.flip(image, 1)
-    return reflected
+        raise ValueError("Axis must be 'x' or 'y'.")
+
 
 def angle_image(image, k, axis):
     (height, width) = image.shape[:2]
@@ -122,8 +128,7 @@ def angle_image(image, k, axis):
         matrix = np.float32([[1, k, 0], [0, 1, 0]])
     else:
         matrix = np.float32([[1, 0, 0], [k, 1, 0]])
-    return cv2.warpAffine(image, matrix, (width, height))
-
+    return cv2.warpAffine(image, matrix, (width, height), borderMode=cv2.BORDER_REPLICATE)
 
 
 batman = np.array([[0, 0], [1, 0.2], [0.4, 1], [0.5, 0.4], [0, 0.8], [-0.5, 0.4], [-0.4, 1], [-1.5, 0.5], [0, 0]])
