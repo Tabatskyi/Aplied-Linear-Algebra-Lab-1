@@ -175,4 +175,4 @@ rotated_rick2 = rotate_image(rick2, 90)
 reflected_rick2 = reflect_image(rotated_rick2, 'y')
 angled_rick2 = angle_image(reflected_rick2, 0.5, 'x')
 
-show_image(rotated_rick)
+show_image(angled_rick2)
