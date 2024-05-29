@@ -168,3 +168,11 @@ angled_rick = angle_image(rick, 0.5, 'x')
 reflected_rick = reflect_image(angled_rick, 'y')
 rotated_rick = rotate_image(reflected_rick, 90)
 show_image(rotated_rick)
+
+
+rick2 = cv2.imread('rick.png')
+rotated_rick2 = rotate_image(rick2, 90)
+reflected_rick2 = reflect_image(rotated_rick2, 'y')
+angled_rick2 = angle_image(reflected_rick2, 0.5, 'x')
+
+show_image(rotated_rick)
