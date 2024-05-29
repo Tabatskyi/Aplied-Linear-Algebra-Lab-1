@@ -92,8 +92,8 @@ def angle_matrix(original_matrix: np.array, k: float, fixed_axis: int, variable_
     transform_by_matrix(original_matrix, trans_matrix, f"Angled by {k} along {fixed_axis} axis")
 
 
-def show_image(image, message):
-    plt.imshow(image, cmap='gray')
+def show_image(image):
+    plt.imshow(image)
     plt.show()
 
 
@@ -101,13 +101,12 @@ def rotate_image(image, angle):
     (height, width) = image.shape[:2]
     center = (width // 2, height // 2)
     matrix = cv2.getRotationMatrix2D(center, angle, 1.0)
-    rotated = cv2.warpAffine(image, matrix, (width, height))
-    show_image(rotated, f"Rotated by {angle}º")
+    return cv2.warpAffine(image, matrix, (width, height))
 
 
 def scale_image(image, scale_x, scale_y):
     scaled = cv2.resize(image, None, fx=scale_x, fy=scale_y)
-    show_image(scaled, f"Scaled by {scale_x}, {scale_y} (OpenCV)")
+    return scaled
 
 
 def reflect_image(image, axis):
@@ -115,8 +114,7 @@ def reflect_image(image, axis):
         reflected = cv2.flip(image, 0)
     else:
         reflected = cv2.flip(image, 1)
-    show_image(reflected, f"Reflected across {axis} (OpenCV)")
-
+    return reflected
 
 def angle_image(image, k, axis):
     (height, width) = image.shape[:2]
@@ -124,8 +122,8 @@ def angle_image(image, k, axis):
         matrix = np.float32([[1, k, 0], [0, 1, 0]])
     else:
         matrix = np.float32([[1, 0, 0], [k, 1, 0]])
-    angled = cv2.warpAffine(image, matrix, (width, height))
-    show_image(angled, f"Angled by {k} along {axis} axis (OpenCV)")
+    return cv2.warpAffine(image, matrix, (width, height))
+
 
 
 batman = np.array([[0, 0], [1, 0.2], [0.4, 1], [0.5, 0.4], [0, 0.8], [-0.5, 0.4], [-0.4, 1], [-1.5, 0.5], [0, 0]])
@@ -148,7 +146,20 @@ angle_matrix(cube, 1, 2, 1)
 
 show_matrices([batman], [''], True)
 plot = cv2.imread('plot.png')
-rotate_image(plot, 45)
-scale_image(plot, 2, 2)
-reflect_image(plot, 'y')
-angle_image(plot, 0.5, 'x')
+rotated = rotate_image(plot, 45)
+show_image(rotated)
+
+scaled = scale_image(plot, 2, 2)
+show_image(scaled)
+
+reflected = reflect_image(plot, 'y')
+show_image(reflected)
+
+angled = angle_image(plot, 0.5, 'x')
+show_image(angled)
+
+rick = cv2.imread('rick.png')
+angled_rick = angle_image(rick, 0.5, 'x')
+reflected_rick = reflect_image(angled_rick, 'y')
+rotated_rick = rotate_image(reflected_rick, 90)
+show_image(rotated_rick)
