@@ -97,7 +97,6 @@ def show_image(image):
     plt.imshow(image)
     plt.show()
 
-
 def rotate_image(image, angle):
     (height, width) = image.shape[:2]
     center = (width // 2, height // 2)
@@ -125,10 +124,48 @@ def reflect_image(image, axis):
 def angle_image(image, k, axis):
     (height, width) = image.shape[:2]
     if axis == 'x':
-        matrix = np.float32([[1, k, 0], [0, 1, 0]])
+        src_points = np.float32([[0, 0], [width, 0], [0, height]])
+        dst_points = np.float32([[0, 0], [width, 0], [k * height, height]])
     else:
-        matrix = np.float32([[1, 0, 0], [k, 1, 0]])
+        src_points = np.float32([[0, 0], [width, 0], [0, height]])
+        dst_points = np.float32([[0, 0], [width, k * width], [0, height]])
+
+    matrix = cv2.getAffineTransform(src_points, dst_points)
     return cv2.warpAffine(image, matrix, (width, height), borderMode=cv2.BORDER_REPLICATE)
+
+
+def rotate_matrix_opencv(image, angle, scale=1.0):
+    matrix = cv2.getRotationMatrix2D((0, 0), angle, scale)
+    return cv2.transform(np.array([image]), matrix)[0]
+
+
+def scale_matrix_opencv(image, scale):
+    return rotate_matrix_opencv(image, 0, scale)
+
+
+def reflect_matrix_opencv(image, axis):
+    if axis == 'x':
+        return cv2.flip(image, 0)
+    elif axis == 'y':
+        return cv2.flip(image, 1)
+    else:
+        raise ValueError("Axis must be 'x' or 'y'.")
+
+
+def angle_matrix_opencv(image, k, axis):
+    (height, width) = image.shape[:2]
+
+    if axis == 'x':
+        src_points = np.float32([[0, 0], [width, 0], [0, height]])
+        dst_points = np.float32([[0, 0], [width, 0], [k * height, height]])
+    else:
+        src_points = np.float32([[0, 0], [width, 0], [0, height]])
+        dst_points = np.float32([[0, 0], [width, k * width], [0, height]])
+
+    matrix = cv2.getAffineTransform(src_points, dst_points)
+
+    transformed_image = cv2.transform(np.array([image]), matrix)[0]
+    return transformed_image
 
 
 batman = np.array([[0, 0], [1, 0.2], [0.4, 1], [0.5, 0.4], [0, 0.8], [-0.5, 0.4], [-0.4, 1], [-1.5, 0.5], [0, 0]])
@@ -149,19 +186,18 @@ scale_matrix(cube, [1, 2, 1])
 reflect_matrix(cube, [True, True, False])
 angle_matrix(cube, 1, 2, 1)
 
-show_matrices([batman], [''], True)
-plot = cv2.imread('plot.png')
-rotated = rotate_image(plot, 45)
-show_image(rotated)
+# plot = cv2.imread('plot.png')
+rotated = rotate_matrix_opencv(batman, 45)
+show_matrices([batman, rotated], ['Original', f"Rotated by 45º (OpenCV)"])
 
-scaled = scale_image(plot, 2, 2)
-show_image(scaled)
+scaled = scale_matrix_opencv(batman, 2)
+show_matrices([batman, scaled], ['Original', f"Scaled by [2, 2] (OpenCV)"])
 
-reflected = reflect_image(plot, 'y')
-show_image(reflected)
+reflected = reflect_matrix_opencv(batman, 'y')
+show_matrices([batman, reflected], ['Original', f"Reflected by y (OpenCV)"])
 
-angled = angle_image(plot, 0.5, 'x')
-show_image(angled)
+angled = angle_matrix_opencv(batman, 1, 'x')
+show_matrices([batman, angled], ['Original', f"Scaled by [2, 2] (OpenCV)"])
 
 rick = cv2.imread('rick.png')
 angled_rick = angle_image(rick, 0.5, 'x')
