@@ -7,23 +7,30 @@ from matplotlib import pyplot as plt
 def plot_matrices(matrices, labels, save_path=None):
     dimension = matrices[0].shape[1]
     fig = plt.figure()
+    max_value = np.max(matrices)
+    min_value = np.min(matrices)
     if dimension == 3:
-        ax = fig.add_subplot(111, projection='3d')
+        axis = fig.add_subplot(111, projection='3d')
         set_labels = ('X', 'Y', 'Z')
     else:
-        ax = fig.add_subplot(111)
+        axis = fig.add_subplot(111)
         set_labels = ('X', 'Y')
 
     for matrix, label in zip(matrices, labels):
         if dimension == 3:
-            ax.scatter(matrix[:, 0], matrix[:, 1], matrix[:, 2], label=label)
+            axis.plot(matrix[:, 0], matrix[:, 1], matrix[:, 2], label=label)
+            axis.set_xlim(min_value, max_value)
+            axis.set_ylim(min_value, max_value)
+            axis.set_zlim(min_value, max_value)
         else:
-            ax.plot(matrix[:, 0], matrix[:, 1], label=label)
+            axis.plot(matrix[:, 0], matrix[:, 1], label=label)
+            plt.xlim(min_value, max_value)
+            plt.ylim(min_value, max_value)
 
-    ax.set_xlabel(set_labels[0])
-    ax.set_ylabel(set_labels[1])
+    axis.set_xlabel(set_labels[0])
+    axis.set_ylabel(set_labels[1])
     if dimension == 3:
-        ax.set_zlabel(set_labels[2])
+        axis.set_zlabel(set_labels[2])
     plt.legend()
     plt.grid(True)
     if save_path:
@@ -79,22 +86,34 @@ def angle_matrix(matrix, k, fixed_axis, variable_axis):
     apply_matrix_transformation(matrix, transformation_matrix, f"Angled by {k} along {fixed_axis} axis")
 
 
-def show_image(image):
-    plt.imshow(image)
-    plt.show()
+def get_angle_matrix(matrix, k, axis):
+    (height, width) = matrix.shape[:2]
+    if axis == 'x':
+        src_points = np.float32([[0, 0], [width, 0], [0, height]])
+        dst_points = np.float32([[0, 0], [width, 0], [k * height, height]])
+    else:
+        src_points = np.float32([[0, 0], [width, 0], [0, height]])
+        dst_points = np.float32([[0, 0], [width, k * width], [0, height]])
+
+    return cv2.getAffineTransform(src_points, dst_points)
+
+
+def transform_image(image, matrix):
+    (height, width) = image.shape[:2]
+    return cv2.warpAffine(image, matrix, (width, height), borderMode=cv2.BORDER_REPLICATE)
+
 
 def rotate_image(image, angle):
     (height, width) = image.shape[:2]
     center = (width // 2, height // 2)
-    matrix = cv2.getRotationMatrix2D(center, angle, 1.0)
-    return cv2.warpAffine(image, matrix, (width, height), borderMode=cv2.BORDER_REPLICATE)
+    rotation_matrix = cv2.getRotationMatrix2D(center, angle, 1.0)
+    return transform_image(image, rotation_matrix)
 
 
 def scale_image(image, scale_x, scale_y):
     height, width = image.shape[:2]
     new_width = int(width * scale_x)
     new_height = int(height * scale_y)
-
     return cv2.resize(image, (new_width, new_height))
 
 
@@ -107,17 +126,16 @@ def reflect_image(image, axis):
         raise ValueError("Axis must be 'x' or 'y'.")
 
 
-def angle_image(image, k, axis):
-    (height, width) = image.shape[:2]
-    if axis == 'x':
-        src_points = np.float32([[0, 0], [width, 0], [0, height]])
-        dst_points = np.float32([[0, 0], [width, 0], [k * height, height]])
-    else:
-        src_points = np.float32([[0, 0], [width, 0], [0, height]])
-        dst_points = np.float32([[0, 0], [width, k * width], [0, height]])
+def angle_image(image, k, axis='x'):
+    angle_matrix = get_angle_matrix(image, k, axis)
+    return transform_image(image, angle_matrix)
 
-    matrix = cv2.getAffineTransform(src_points, dst_points)
-    return cv2.warpAffine(image, matrix, (width, height), borderMode=cv2.BORDER_REPLICATE)
+
+def show_image(image, title="Image"):
+    plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+    plt.title(title)
+    plt.axis('off')
+    plt.show()
 
 
 def rotate_matrix_opencv(image, angle, scale=1.0):
@@ -138,20 +156,9 @@ def reflect_matrix_opencv(image, axis):
         raise ValueError("Axis must be 'x' or 'y'.")
 
 
-def angle_matrix_opencv(image, k, axis):
-    (height, width) = image.shape[:2]
-
-    if axis == 'x':
-        src_points = np.float32([[0, 0], [width, 0], [0, height]])
-        dst_points = np.float32([[0, 0], [width, 0], [k * height, height]])
-    else:
-        src_points = np.float32([[0, 0], [width, 0], [0, height]])
-        dst_points = np.float32([[0, 0], [width, k * width], [0, height]])
-
-    matrix = cv2.getAffineTransform(src_points, dst_points)
-
-    transformed_image = cv2.transform(np.array([image]), matrix)[0]
-    return transformed_image
+def angle_matrix_opencv(matrix, k, axis):
+    angle_matrix = get_angle_matrix(matrix, k, axis)
+    return cv2.transform(np.array([matrix]), angle_matrix)[0]
 
 
 batman = np.array([[0, 0], [1, 0.2], [0.4, 1], [0.5, 0.4], [0, 0.8], [-0.5, 0.4], [-0.4, 1], [-1.5, 0.5], [0, 0]])
@@ -190,7 +197,6 @@ angled_rick = angle_image(rick, 0.5, 'x')
 reflected_rick = reflect_image(angled_rick, 'y')
 rotated_rick = rotate_image(reflected_rick, 90)
 show_image(rotated_rick)
-
 
 rick2 = cv2.imread('rick.png')
 rotated_rick2 = rotate_image(rick2, 90)
